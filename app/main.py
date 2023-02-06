@@ -20,5 +20,5 @@ with st.container():
 
 with st.container():
     holdings_input.header() 
-    operation, ticker,shares,cost,target = holdings_input.widgets()
+    operation,account,ticker,shares,cost,target = holdings_input.widgets()
     enter = holdings_input.button()

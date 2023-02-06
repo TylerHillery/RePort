@@ -6,7 +6,7 @@ class sidebar():
     def select_box():
         rebalance_type = st.selectbox(
             "Select Rebalance Type",
-            ("New Money Only","Whole Portfolio")
+            ("Investable Cash","Whole Portfolio")
         )
         return rebalance_type
     
@@ -18,13 +18,14 @@ class holdings_input():
     def header():
         st.markdown("#### **Input Holdings**") 
     def widgets():
-        c1, c2, c3, c4, c5, c6 = st.columns((1.5,1.5,1.5,1.5,3,6))
-        operation   = c1.selectbox("Select Operation",("Add","Update","Delete"))
-        ticker      = c2.text_input('Ticker')
-        shares      = c3.number_input('Shares')
-        cost        = c4.number_input('Cost')
-        target      = c5.slider('Target Weight (%)')
-        return (operation, ticker,shares,cost,target)
+        c1, c2, c3, c4, c5, c6, c7 = st.columns((1,1.5,1,1.5,1.5,3,3))
+        operation   = c1.selectbox('Select Operation',('Add','Update','Delete'))
+        account     = c2.text_input('Account Name')
+        ticker      = c3.text_input('Ticker')
+        shares      = c4.number_input('Shares')
+        cost        = c5.number_input('Cost')
+        target      = c6.slider('Target Weight (%)')
+        return (operation,account,ticker,shares,cost,target)
     def button():
         enter = st.button(label='Enter')
         return enter
