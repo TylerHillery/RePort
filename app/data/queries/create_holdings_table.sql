@@ -1,11 +1,13 @@
 CREATE TABLE IF NOT EXISTS holdings(
     user_id         TEXT,
     account_name    TEXT,
-    symbol          TEXT,
+    ticker          TEXT,
     security_name   TEXT,
     shares          REAL,
     target_weight   REAL,
     price           INT,
     cost            INT,
+    created_at      TEXT, -- YYYY-MM-DD HH:MM:SS.SSS
+    updated_at      TEXT  -- YYYY-MM-DD HH:MM:SS.SSS
 
-) STRICT;
+)

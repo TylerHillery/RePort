@@ -43,5 +43,6 @@ class Portfolio():
     def header():
         st.markdown("#### **Portfolio**")
     def table():
-        db.query(get_query_string(QUERIES_DIR + 'create_tables')) 
-        holdings_tbl = db.fetch("SELECT * FROM holdings ORDER BY symbol")
+        db.query("DROP TABLE IF EXISTS holdings")
+        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
+        return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
