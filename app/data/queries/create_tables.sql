@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS holdings(
     user_id         TEXT,
-    account         TEXT,
+    account_name    TEXT,
     symbol          TEXT,
     security_name   TEXT,
     shares          REAL,
