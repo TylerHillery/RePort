@@ -37,16 +37,22 @@ class HoldingsInput():
         data = (operation,account,ticker,shares,cost,target)
 
         if submitted:
-            match operation:
-                case "Add":
-                    db.query(
-                        get_query_string(QUERIES_DIR + 'insert_holdings_values'), 
-                        [data[1:]]
-                    )
-                case "Delete":
-                    pass
-                case "Update":
-                    pass
+            if operation == "Add":
+            # TO DO: Add error handeling for invalid values (e.g. 0 shares, delete symbol not in table)
+                db.query(
+                    get_query_string(QUERIES_DIR + "insert_holdings_values"), 
+                    [data[1:]]
+                )
+            if operation == "Delete":
+                db.query(
+                    get_query_string(QUERIES_DIR + "delete_holding"), 
+                    [data[1:3]]
+                )
+            if operation == "Update":
+                db.query(
+                    get_query_string(QUERIES_DIR + "update_holding"), 
+                    [data[1:] + data[1:3]]
+                )
         return data
 
 class Portfolio():
