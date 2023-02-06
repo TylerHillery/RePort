@@ -34,15 +34,20 @@ class HoldingsInput():
         target      = c6.slider('Target Weight (%)')
         submitted   = form.form_submit_button("Submit")
         
+        data = (operation,account,ticker,shares,cost,target)
+
         if submitted:
-            st.write("hello world!")
-        
-        return (operation,account,ticker,shares,cost,target)
+            if operation == 'Add':
+                db.query(
+                    get_query_string(QUERIES_DIR + 'insert_holdings_values'), 
+                    [data[1:]]
+                )
+        return data
 
 class Portfolio():
     def header():
         st.markdown("#### **Portfolio**")
     def table():
-        db.query("DROP TABLE IF EXISTS holdings")
+        # db.query("DROP TABLE IF EXISTS holdings")
         db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
         return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))

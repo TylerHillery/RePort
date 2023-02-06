@@ -9,4 +9,4 @@ SELECT
 FROM 
     holdings
 ORDER BY
-    ticker
+    account_name,ticker
