@@ -25,23 +25,28 @@ class Sidebar():
 class HoldingsInput():    
     def form():
         form = st.form("holdings_input")
-        c1, c2, c3, c4, c5, c6, c7 = form.columns((1,1.5,1,1.5,1.5,3,3))
+        c1, c2, c3, c4, c5, c6, c7 = form.columns((1,1.5,1,1.5,1.5,1.5,5))
         operation   = c1.selectbox('Select Operation',('Add','Update','Delete'))
         account     = c2.text_input('Account Name')
         ticker      = c3.text_input('Ticker')
-        shares      = c4.number_input('Shares')
-        cost        = c5.number_input('Cost')
-        target      = c6.slider('Target Weight (%)')
+        shares      = c4.number_input('Shares',min_value = 0.00)
+        cost        = c5.number_input('Cost', min_value = 0.00)
+        target      = c6.number_input('Target Weight (%)')
         submitted   = form.form_submit_button("Submit")
         
         data = (operation,account,ticker,shares,cost,target)
 
         if submitted:
-            if operation == 'Add':
-                db.query(
-                    get_query_string(QUERIES_DIR + 'insert_holdings_values'), 
-                    [data[1:]]
-                )
+            match operation:
+                case "Add":
+                    db.query(
+                        get_query_string(QUERIES_DIR + 'insert_holdings_values'), 
+                        [data[1:]]
+                    )
+                case "Delete":
+                    pass
+                case "Update":
+                    pass
         return data
 
 class Portfolio():
