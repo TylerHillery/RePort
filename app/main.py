@@ -17,10 +17,8 @@ with st.sidebar:
 
 with st.container():
     st.title("RePort ⚖️")
-    st.text("""
-    A portfolio rebalancing tool to help investors 
-    get their positions back to target weights.
-    """)
+    st.text("A portfolio rebalancing tool to help investors " +
+    "get their positions back to target weights.")
 
 with st.expander("Input"):
     tab1, tab2 = st.tabs(["Holdings", "Cash"])
@@ -31,12 +29,12 @@ with st.expander("Input"):
 
 with st.container():    
     Portfolio.header()
-    df = (pd.merge(Portfolio.holdings(), 
-                Portfolio.cash(), 
-                how='left',
-                on = 'account_name')
-                .assign(shares_to_invest = lambda df_: (
-                    (df_.pct_to_invest * df_.cash / df_.price / 100).map(int)
-                )))
+    # TO DO: for dynamic there is going to be left over cash
+    # Need to calculate total left over cash filter out tickers
+    # where price is > then total left over cash then order by
+    # tickers that are the most underweight and buy 1 more share
+    # recursively call this function until not enough cash left 
+    # to buy one share of another stock
+    df = (Portfolio.holdings())
     st.table(df)
     st.table(Portfolio.cash())

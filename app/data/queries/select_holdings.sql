@@ -9,7 +9,9 @@ SELECT
     holdings.target_weight,
     holdings.shares,
     holdings.cost,
-    holdings.price
+    holdings.price,
+    cash.cash, 
+    sum(holdings.price * holdings.shares) OVER (PARTITION BY holdings.account_name) + coalesce(cash.cash,0) as portfolio_market_value
 FROM 
     holdings
     LEFT JOIN cash

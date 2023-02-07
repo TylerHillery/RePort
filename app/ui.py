@@ -142,12 +142,22 @@ class Portfolio():
             "market_value":     "Market Value($)",
             "price":            "Price ($)",
             "gain_loss":        "Gain or Loss ($)",
-            "gain_loss_pct":    "Gain or Loss (%)"
+            "gain_loss_pct":    "Gain or Loss (%)",
+            "cash":             "Investable Cash ($)",
+            "portfolio_market_value": "Portfolio Market Value ($)",
+            "dynamic_shares_to_invest_whole": "FILL LATER",
+            "dynamic_shares_to_invest_frac": "FILL LATER",
+            "target_shares_to_invest_whole": "FILL LATER",
+            "target_shares_to_invest_frac": "FILL LATER",
+            "all_shares_to_invest_whole": "FILL LATER",
+            "all_shares_to_invest_frac": "FILL LATER",
         }
         df = (df.assign(target_diff =  (df.current_weight - df.target_weight),
                         cost = df.cost / 100,
                         price = df.price / 100,
-                        market_value = df.price * df.shares / 100)
+                        market_value = df.price * df.shares / 100,
+                        cash = df.cash / 100,
+                        portfolio_market_value = df.portfolio_market_value / 100)
                 .assign(gain_loss = lambda df_: (df_.market_value - df_.cost),
                         gain_loss_pct = lambda df_:(
                             (df_.market_value - df_.cost) / df_.cost * 100),
@@ -157,6 +167,22 @@ class Portfolio():
                                 .groupby('account_name')['target_diff']
                                 .transform('sum'))*100))
                 .assign(pct_to_invest =  lambda df_: df_.pct_to_invest.fillna(0))
+                .assign(dynamic_shares_to_invest_whole = lambda df_: (
+                            (df_.pct_to_invest * df_.cash / df_.price / 100).map(int)),
+                        dynamic_shares_to_invest_frac = lambda df_: (
+                            (df_.pct_to_invest * df_.cash / df_.price / 100)),
+                        target_shares_to_invest_whole = lambda df_: (
+                            (df_.target_weight * df_.cash / df_.price / 100).map(int)),
+                        target_shares_to_invest_frac = lambda df_: (
+                            (df_.target_weight * df_.cash / df_.price / 100)),
+                        all_shares_to_invest_whole = lambda df_: (
+                           ((df_.target_diff * -1 * df_.portfolio_market_value + 
+                                df_.market_value) / df_.price )
+                                .map(int)),
+                        all_shares_to_invest_frac = lambda df_: (
+                           ((df_.target_diff * -1 * df_.portfolio_market_value + 
+                                df_.market_value) / df_.price ))
+                        )
                 # .rename(columns=holdings_columns)
                 .loc[:,list(holdings_columns.keys())]
                 # .style.format(precision=2,thousands=",")
