@@ -25,10 +25,41 @@ class Sidebar():
     def check_box():
         is_frac_shares = st.checkbox("Allow fractional share investing?")
         return is_frac_shares
-    
-    def number_input():
-        investable_cash = st.number_input('Investable Cash ($)',min_value = 0.00)
-        return investable_cash
+
+class CashInput():
+    def form():
+        form  = st.form("cash_input")
+        c1, c2, c3  = form.columns((1.5,1.5,1.5))
+        operation   = c1.selectbox('Select Operation',('Add','Update','Delete'))
+        account     = c2.text_input('Account Name')
+        cash        = c3.number_input('Investable Cash ($)',min_value = 0.00)
+        submitted   = form.form_submit_button("Submit")
+
+        data = (
+            operation,
+            account.strip(),
+            cash*100
+        )
+
+        if submitted:
+            if operation == "Add":
+            # TO DO: Add error handling for invalid values (e.g. 0 shares)
+                db.query(
+                    get_query_string(QUERIES_DIR + "insert_cash_values"), 
+                    [data[1:]]
+                )
+            if operation == "Delete":
+                db.query(
+                    get_query_string(QUERIES_DIR + "delete_cash"), 
+                    [(data[1],)]
+                )
+            if operation == "Update":
+                db.query(
+                    get_query_string(QUERIES_DIR + "update_cash"), 
+                    [data[:0:-1],]
+                )
+        return data
+        
 
 class HoldingsInput():    
     def form():
@@ -95,7 +126,10 @@ class HoldingsInput():
 class Portfolio():
     def header():
         st.markdown("#### **Portfolio**")
-    def table():
+    def holdings():
         # db.query("DROP TABLE IF EXISTS holdings")
         db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
         return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+    def cash():
+        db.query(get_query_string(QUERIES_DIR + 'create_cash_table')) 
+        return db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "portfolio-rebalancer"
+name = "RePort"
 version = "0.1.0"
 description = ""
 authors = ["Tyler Hillery <tyler.p.hillery@outlook.com>"]
