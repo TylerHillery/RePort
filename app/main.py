@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from database import SQLite
@@ -17,7 +18,8 @@ with st.sidebar:
 with st.container():
     st.title("RePort ⚖️")
     st.text("""
-    A portfolio rebalancing tool to help investors get their positions back to target weights.
+    A portfolio rebalancing tool to help investors 
+    get their positions back to target weights.
     """)
 
 with st.expander("Input"):
@@ -29,5 +31,12 @@ with st.expander("Input"):
 
 with st.container():    
     Portfolio.header()
-    st.table(Portfolio.holdings())
+    df = (pd.merge(Portfolio.holdings(), 
+                Portfolio.cash(), 
+                how='left',
+                on = 'account_name')
+                .assign(shares_to_invest = lambda df_: (
+                    (df_.pct_to_invest * df_.cash / df_.price / 100).map(int)
+                )))
+    st.table(df)
     st.table(Portfolio.cash())

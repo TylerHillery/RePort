@@ -137,22 +137,29 @@ class Portfolio():
             "target_weight":    "Target Weight (%)",
             "current_weight":   "Current Weight (%)",
             "target_diff":      "Target Difference (%)",
+            "pct_to_invest":    "Percent of Cash to Invest (%)",
             "cost":             "Cost ($)",
             "market_value":     "Market Value($)",
             "price":            "Price ($)",
             "gain_loss":        "Gain or Loss ($)",
             "gain_loss_pct":    "Gain or Loss (%)"
         }
-        market_value = df.price * df.shares
-        df = (df.assign(target_diff =  (df.current_weight - df.target_weight))
-                .assign(cost = df.cost / 100)
-                .assign(price = df.price / 100)
-                .assign(market_value = (market_value) / 100)
-                .assign(gain_loss = (market_value - df.cost) / 100)
-                .assign(gain_loss_pct =(market_value - df.cost) / df.cost * 100)
-                .rename(columns=holdings_columns)
-                .loc[:,list(holdings_columns.values())]
-                .style.format(precision=2,thousands=",")
+        df = (df.assign(target_diff =  (df.current_weight - df.target_weight),
+                        cost = df.cost / 100,
+                        price = df.price / 100,
+                        market_value = df.price * df.shares / 100)
+                .assign(gain_loss = lambda df_: (df_.market_value - df_.cost),
+                        gain_loss_pct = lambda df_:(
+                            (df_.market_value - df_.cost) / df_.cost * 100),
+                        pct_to_invest =  lambda df_:(
+                            df_.target_diff / (
+                                df_[(df_.target_diff < 0)]
+                                .groupby('account_name')['target_diff']
+                                .transform('sum'))*100))
+                .assign(pct_to_invest =  lambda df_: df_.pct_to_invest.fillna(0))
+                # .rename(columns=holdings_columns)
+                .loc[:,list(holdings_columns.keys())]
+                # .style.format(precision=2,thousands=",")
             )
         return df
     def cash():
@@ -163,8 +170,8 @@ class Portfolio():
         }
         df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
         df = (df.assign(cash = df.cash / 100)
-                .rename(columns = cash_columns)
-                .loc[:,list(cash_columns.values())]
-                .style.format(precision=2,thousands=",")
+                # .rename(columns = cash_columns)
+                .loc[:,list(cash_columns.keys())]
+                # .style.format(precision=2,thousands=",")
             )
         return df
