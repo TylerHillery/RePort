@@ -17,7 +17,7 @@ with st.sidebar:
 with st.container():
     st.title("RePort ⚖️")
     st.text("""
-    Portfolio rebalancing tool to help investors get positions back to target weights.
+    A portfolio balancing tool to help investors get their positions back to target weights.
     """)
 
 with st.expander("Input"):
