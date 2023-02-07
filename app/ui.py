@@ -14,13 +14,21 @@ class Sidebar():
     def select_box():
         rebalance_type = st.selectbox(
             "Select Rebalance Type",
-            ("Investable Cash","Whole Portfolio")
+            (
+                "Investable Cash Dynamic",
+                "Investable Cash Target",
+                "Whole Portfolio"
+            )
         )
         return rebalance_type
     
     def check_box():
-        is_frac_shares = st.checkbox("Are you allowed fractional share investing?")
+        is_frac_shares = st.checkbox("Allow fractional share investing?")
         return is_frac_shares
+    
+    def number_input():
+        investable_cash = st.number_input('Investable Cash ($)',min_value = 0.00)
+        return investable_cash
 
 class HoldingsInput():    
     def form():
@@ -45,13 +53,16 @@ class HoldingsInput():
                             )
 
             price           = c4.number_input(
-                                'Current Price',
+                                'Price',
                                 min_value = 0.00,
-                                help = "Current Stock Price"
+                                help = """
+                                Current stock price or price you plan on
+                                purchasing the stock at
+                                """
                             ) 
         
         submitted = form.form_submit_button("Submit")
-        
+
         data = (
             operation,
             account.strip(),

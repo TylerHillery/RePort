@@ -11,8 +11,9 @@ st.set_page_config(layout="wide")
 
 with st.sidebar:
     Sidebar.header()
-    rebalance_type = Sidebar.select_box()
-    is_frac_shares = Sidebar.check_box()
+    rebalance_type  = Sidebar.select_box()
+    investable_cash = Sidebar.number_input()
+    is_frac_shares  = Sidebar.check_box()
 
 with st.container():
     st.title("Portfolio Rebalancer ⚖️")
@@ -28,13 +29,34 @@ with st.container():
         "security_name":    "Name",
         "shares":           "Shares",
         "target_weight":    "Target Weight (%)",
-        "cost":             "Cost",
-        "price":            "Price"
+        "current_weight":   "Current Weight (%)",
+        "target_diff":      "Target Difference (%)",
+        "cost":             "Cost ($)",
+        "market_value":     "Market Value($)",
+        "price":            "Price ($)",
+        "gain_loss":        "Gain or Loss ($)",
+        "gain_loss_pct":    "Gain or Loss (%)"
     }
+    # TO DO: Handle empty df. 
+    market_value = Portfolio.table().price * Portfolio.table().shares
+    
     st.table(Portfolio
                 .table()
+                .assign(target_diff =  (
+                    Portfolio.table().current_weight - Portfolio.table().target_weight
+                    )
+                )
+                .assign(cost   = Portfolio.table().cost / 100)
+                .assign(price  = Portfolio.table().price / 100)
+                .assign(market_value = (market_value) / 100)
+                .assign(gain_loss = (
+                   market_value - Portfolio.table().cost 
+                   ) / 100
+                )
+                .assign(gain_loss_pct =(
+                   market_value - Portfolio.table().cost 
+                   ) / Portfolio.table().cost * 100
+                )
                 .rename(columns=columns)
-                .assign(Cost_Dollars   = Portfolio.table().cost / 100)
-                .assign(Price_Dollars  = Portfolio.table().price / 100)
-
+                .loc[:,list(columns.values())]
     )
