@@ -123,13 +123,48 @@ class HoldingsInput():
                 )
         return data
 
-class Portfolio():
+class Portfolio():     
     def header():
         st.markdown("#### **Portfolio**")
     def holdings():
-        # db.query("DROP TABLE IF EXISTS holdings")
         db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
-        return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+        df = db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+        holdings_columns = {
+            "account_name":     "Account",
+            "ticker":           "Ticker",
+            "security_name":    "Name",
+            "shares":           "Shares",
+            "target_weight":    "Target Weight (%)",
+            "current_weight":   "Current Weight (%)",
+            "target_diff":      "Target Difference (%)",
+            "cost":             "Cost ($)",
+            "market_value":     "Market Value($)",
+            "price":            "Price ($)",
+            "gain_loss":        "Gain or Loss ($)",
+            "gain_loss_pct":    "Gain or Loss (%)"
+        }
+        market_value = df.price * df.shares
+        df = (df.assign(target_diff =  (df.current_weight - df.target_weight))
+                .assign(cost = df.cost / 100)
+                .assign(price = df.price / 100)
+                .assign(market_value = (market_value) / 100)
+                .assign(gain_loss = (market_value - df.cost) / 100)
+                .assign(gain_loss_pct =(market_value - df.cost) / df.cost * 100)
+                .rename(columns=holdings_columns)
+                .loc[:,list(holdings_columns.values())]
+                .style.format(precision=2,thousands=",")
+            )
+        return df
     def cash():
         db.query(get_query_string(QUERIES_DIR + 'create_cash_table')) 
-        return db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
+        cash_columns = {
+        "account_name": "Account",
+        "cash": "Investable Cash ($)",
+        }
+        df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
+        df = (df.assign(cash = df.cash / 100)
+                .rename(columns = cash_columns)
+                .loc[:,list(cash_columns.values())]
+                .style.format(precision=2,thousands=",")
+            )
+        return df

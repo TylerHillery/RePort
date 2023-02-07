@@ -17,7 +17,7 @@ with st.sidebar:
 with st.container():
     st.title("RePort ⚖️")
     st.text("""
-    A portfolio balancing tool to help investors get their positions back to target weights.
+    A portfolio rebalancing tool to help investors get their positions back to target weights.
     """)
 
 with st.expander("Input"):
@@ -27,52 +27,7 @@ with st.expander("Input"):
     with tab2:
          operation,account,cash = CashInput.form()
 
-with st.container():
-    holdings_columns = {
-        "account_name":     "Account",
-        "ticker":           "Ticker",
-        "security_name":    "Name",
-        "shares":           "Shares",
-        "target_weight":    "Target Weight (%)",
-        # "current_weight":   "Current Weight (%)",
-        # "target_diff":      "Target Difference (%)",
-        "cost":             "Cost ($)",
-        "market_value":     "Market Value($)",
-        "price":            "Price ($)",
-        "gain_loss":        "Gain or Loss ($)",
-        "gain_loss_pct":    "Gain or Loss (%)"
-    }
-    cash_columns = {
-        "account_name":     "Account",
-        "cash":             "Investable Cash ($)",
-    }
-    # TO DO: Handle empty df. 
-    market_value = Portfolio.holdings().price * Portfolio.holdings().shares
-
-    st.table(Portfolio
-                .holdings()
-                # .assign(target_diff =  (
-                #     Portfolio.holdings().current_weight - Portfolio.holdings().target_weight
-                #     )
-                # )
-                .assign(cost   = Portfolio.holdings().cost / 100)
-                .assign(price  = Portfolio.holdings().price / 100)
-                .assign(market_value = (market_value) / 100)
-                .assign(gain_loss = (
-                   market_value - Portfolio.holdings().cost 
-                   ) / 100
-                )
-                .assign(gain_loss_pct =(
-                   market_value - Portfolio.holdings().cost 
-                   ) / Portfolio.holdings().cost * 100
-                )
-                .rename(columns=holdings_columns)
-                .loc[:,list(holdings_columns.values())]
-    )
-
-    st.table(Portfolio
-                .cash()
-                .assign(cash   = Portfolio.cash().cash / 100)
-                .rename(columns=cash_columns)
-                .loc[:,list(cash_columns.values())]
-                )
+with st.container():    
+    Portfolio.header()
+    st.table(Portfolio.holdings())
+    st.table(Portfolio.cash())
