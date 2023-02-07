@@ -2,8 +2,9 @@ UPDATE holdings SET
     account_name    = ?, 
     ticker          = ?,
     shares          = ?,
+    target_weight   = ?,
     cost            = ?,
-    target_weight   = ?
+    price           = ?    
 WHERE
     account_name    = ?
 AND ticker          = ?

@@ -3,7 +3,8 @@ INSERT INTO
         account_name,
         ticker,
         shares,
+        target_weight,
         cost,
-        target_weight
+        price
     ) 
-VALUES (?,?,?,?,?)
+VALUES (?,?,?,?,?,?)

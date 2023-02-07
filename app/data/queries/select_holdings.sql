@@ -2,10 +2,10 @@ SELECT
     account_name,
     ticker,
     security_name,
-    shares,
     target_weight,
-    price,
-    cost
+    shares,
+    cost,
+    price
 FROM 
     holdings
 ORDER BY

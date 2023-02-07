@@ -19,7 +19,7 @@ with st.container():
     st.text("Tool to help investors get positions back to target weights.")
 
 with st.expander("Input Holdings"):
-    operation,account,ticker,shares,cost,target = HoldingsInput.form()
+    operation,account,ticker,shares,target,cost,price = HoldingsInput.form()
 
 with st.container():
     columns = {
@@ -28,11 +28,13 @@ with st.container():
         "security_name":    "Name",
         "shares":           "Shares",
         "target_weight":    "Target Weight (%)",
-        "price":            "Price",
-        "cost":             "Cost" 
-
+        "cost":             "Cost",
+        "price":            "Price"
     }
-    st.write(Portfolio
+    st.table(Portfolio
                 .table()
                 .rename(columns=columns)
+                .assign(Cost_Dollars   = Portfolio.table().cost / 100)
+                .assign(Price_Dollars  = Portfolio.table().price / 100)
+
     )

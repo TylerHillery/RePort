@@ -24,21 +24,47 @@ class Sidebar():
 
 class HoldingsInput():    
     def form():
-        form = st.form("holdings_input")
-        c1, c2, c3, c4, c5, c6, c7 = form.columns((1,1.5,1,1.5,1.5,1.5,5))
-        operation   = c1.selectbox('Select Operation',('Add','Update','Delete'))
-        account     = c2.text_input('Account Name')
-        ticker      = c3.text_input('Ticker')
-        shares      = c4.number_input('Shares',min_value = 0.00)
-        cost        = c5.number_input('Cost', min_value = 0.00)
-        target      = c6.number_input('Target Weight (%)')
-        submitted   = form.form_submit_button("Submit")
+        form  = st.form("holdings_input")
+        row_1 = form.container()
+        row_2 = form.container()
         
-        data = (operation,account,ticker,shares,cost,target)
+        with row_1:
+            c1, c2, c3  = row_1.columns((1.5,1.5,1.5))
+            operation   = c1.selectbox('Select Operation',('Add','Update','Delete'))
+            account     = c2.text_input('Account Name')
+            ticker      = c3.text_input('Ticker')
+        
+        with row_2:
+            c1, c2, c3, c4  = row_2.columns((1.25,1.25,1.25,1.25))
+            shares          = c1.number_input('Shares',min_value = 0.00)
+            target          = c2.number_input('Target Weight (%)')
+            cost            = c3.number_input(
+                                'Cost', 
+                                min_value = 0.00, 
+                                help = "Total Cost for all shares"
+                            )
+
+            price           = c4.number_input(
+                                'Current Price',
+                                min_value = 0.00,
+                                help = "Current Stock Price"
+                            ) 
+        
+        submitted = form.form_submit_button("Submit")
+        
+        data = (
+            operation,
+            account.strip(),
+            ticker.strip(),
+            shares,
+            target,
+            cost*100,
+            price*100
+        )
 
         if submitted:
             if operation == "Add":
-            # TO DO: Add error handeling for invalid values (e.g. 0 shares, delete symbol not in table)
+            # TO DO: Add error handling for invalid values (e.g. 0 shares)
                 db.query(
                     get_query_string(QUERIES_DIR + "insert_holdings_values"), 
                     [data[1:]]
