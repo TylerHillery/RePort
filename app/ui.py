@@ -132,33 +132,11 @@ class Portfolio():
         "account_name": "Account",
         "cash": "Investable Cash ($)",
         }
-        df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash')).loc[:,list(cash_columns.keys())]
+        df = (db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
+                .loc[:,list(cash_columns.keys())])
         return df
 
     def holdings():
-        holdings_columns = {
-            "account_name":     "Account",
-            "ticker":           "Ticker",
-            "security_name":    "Name",
-            "shares":           "Shares",
-            "target_weight":    "Target Weight (%)",
-            "current_weight":   "Current Weight (%)",
-            "target_diff":      "Target Difference (%)",
-            "pct_to_invest":    "Percent of Cash to Invest (%)",
-            "cost":             "Cost ($)",
-            "market_value":     "Market Value($)",
-            "price":            "Price ($)",
-            "gain_loss":        "Gain or Loss ($)",
-            "gain_loss_pct":    "Gain or Loss (%)",
-            "cash":             "Investable Cash ($)",
-            "portfolio_market_value": "Portfolio Market Value ($)",
-            "dynamic_shares_to_invest_whole": "FILL LATER",
-            "dynamic_shares_to_invest_frac": "FILL LATER",
-            "target_shares_to_invest_whole": "FILL LATER",
-            "target_shares_to_invest_frac": "FILL LATER",
-            "all_shares_to_invest_whole": "FILL LATER",
-            "all_shares_to_invest_frac": "FILL LATER",
-        }
         return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
     
     def dynamic_invest(account, cash, df_):
