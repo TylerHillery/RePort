@@ -1,11 +1,12 @@
 import streamlit as st
 
-from database import SQLite, get_query_string
+from database import SQLite, DuckEngine, get_query_string
 
 PORTFOLIO_DB = "data/portfolio.db"
 QUERIES_DIR = "app/data/queries/"
 
 db = SQLite(PORTFOLIO_DB)
+duck_engine = DuckEngine(PORTFOLIO_DB)
 
 class Sidebar(): 
     def header():
@@ -38,9 +39,9 @@ class CashInput():
         data = (
             operation,
             account.strip(),
-            cash*100
+            cash
         )
-
+        db.query(get_query_string(QUERIES_DIR + 'create_cash_table')) 
         if submitted:
             if operation == "Add":
             # TO DO: Add error handling for invalid values (e.g. 0 shares)
@@ -100,10 +101,10 @@ class HoldingsInput():
             ticker.strip(),
             shares,
             target,
-            cost*100,
-            price*100
+            cost,
+            price
         )
-
+        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
         if submitted:
             if operation == "Add":
             # TO DO: Add error handling for invalid values (e.g. 0 shares)
@@ -126,8 +127,7 @@ class HoldingsInput():
 class Portfolio():     
     def header():
         st.markdown("#### **Portfolio**")
-    def holdings():
-        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
+    def holdings(add_shares=0):
         df = db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
         holdings_columns = {
             "account_name":     "Account",
@@ -155,9 +155,10 @@ class Portfolio():
         df = (df.assign(target_diff =  (df.current_weight - df.target_weight),
                         cost = df.cost / 100,
                         price = df.price / 100,
-                        market_value = df.price * df.shares / 100,
+                        market_value = df.price * (df.shares + add_shares) / 100,
                         cash = df.cash / 100,
-                        portfolio_market_value = df.portfolio_market_value / 100)
+                        portfolio_market_value = df.portfolio_market_value / 100,
+                        shares = df.shares + add_shares)
                 .assign(gain_loss = lambda df_: (df_.market_value - df_.cost),
                         gain_loss_pct = lambda df_:(
                             (df_.market_value - df_.cost) / df_.cost * 100),
@@ -189,15 +190,33 @@ class Portfolio():
             )
         return df
     def cash():
-        db.query(get_query_string(QUERIES_DIR + 'create_cash_table')) 
         cash_columns = {
         "account_name": "Account",
         "cash": "Investable Cash ($)",
         }
         df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
-        df = (df.assign(cash = df.cash / 100)
+        df = (df.assign(cash = df.cash)
                 # .rename(columns = cash_columns)
                 .loc[:,list(cash_columns.keys())]
                 # .style.format(precision=2,thousands=",")
             )
         return df
+
+    def holding_v2():
+        return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+    
+    def dynamic_invest(account, cash, df_):
+        symbol,price,target_diff = (df_[(df_.price <= cash)]
+                                    .sort_values(by=['target_df'],ascending=False)
+                                    .iloc[0]
+                                    .to_list()
+                                )  
+
+
+        # dataframe columns (symbol,price,target_dif) {account: [cash,df_]}
+        # investable cash per account, single value for all account
+        # symbol, price,
+        # add to whole shares to buy
+        # call function again but subtract out price that it took to buy shared
+        # have to run the loop for each separate account
+        pass

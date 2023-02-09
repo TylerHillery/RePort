@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 streamlit = "^1.17.0"
+duckdb = "^0.6.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.241"

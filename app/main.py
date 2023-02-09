@@ -34,6 +34,9 @@ with st.container():
     # tickers that are the most underweight and buy 1 more share
     # recursively call this function until not enough cash left 
     # to buy one share of another stock
-    df = (Portfolio.holdings())
+    
+
+    
+    df = (Portfolio.holding_v2())
     st.table(df)
     st.table(Portfolio.cash())

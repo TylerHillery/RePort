@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS holdings(
     security_name   TEXT,
     shares          REAL,
     target_weight   REAL,
-    cost            INT,  -- in pennies
-    price           INT,  -- in pennies
+    cost            REAL,
+    price           REAL, 
     created_at      TEXT, -- YYYY-MM-DD HH:MM:SS.SSS
     updated_at      TEXT  -- YYYY-MM-DD HH:MM:SS.SSS
 
