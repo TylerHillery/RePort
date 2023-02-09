@@ -127,8 +127,15 @@ class HoldingsInput():
 class Portfolio():     
     def header():
         st.markdown("#### **Portfolio**")
-    def holdings(add_shares=0):
-        df = db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+    def cash():
+        cash_columns = {
+        "account_name": "Account",
+        "cash": "Investable Cash ($)",
+        }
+        df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash')).loc[:,list(cash_columns.keys())]
+        return df
+
+    def holdings():
         holdings_columns = {
             "account_name":     "Account",
             "ticker":           "Ticker",
@@ -152,57 +159,6 @@ class Portfolio():
             "all_shares_to_invest_whole": "FILL LATER",
             "all_shares_to_invest_frac": "FILL LATER",
         }
-        df = (df.assign(target_diff =  (df.current_weight - df.target_weight),
-                        cost = df.cost / 100,
-                        price = df.price / 100,
-                        market_value = df.price * (df.shares + add_shares) / 100,
-                        cash = df.cash / 100,
-                        portfolio_market_value = df.portfolio_market_value / 100,
-                        shares = df.shares + add_shares)
-                .assign(gain_loss = lambda df_: (df_.market_value - df_.cost),
-                        gain_loss_pct = lambda df_:(
-                            (df_.market_value - df_.cost) / df_.cost * 100),
-                        pct_to_invest =  lambda df_:(
-                            df_.target_diff / (
-                                df_[(df_.target_diff < 0)]
-                                .groupby('account_name')['target_diff']
-                                .transform('sum'))*100))
-                .assign(pct_to_invest =  lambda df_: df_.pct_to_invest.fillna(0))
-                .assign(dynamic_shares_to_invest_whole = lambda df_: (
-                            (df_.pct_to_invest * df_.cash / df_.price / 100).map(int)),
-                        dynamic_shares_to_invest_frac = lambda df_: (
-                            (df_.pct_to_invest * df_.cash / df_.price / 100)),
-                        target_shares_to_invest_whole = lambda df_: (
-                            (df_.target_weight * df_.cash / df_.price / 100).map(int)),
-                        target_shares_to_invest_frac = lambda df_: (
-                            (df_.target_weight * df_.cash / df_.price / 100)),
-                        all_shares_to_invest_whole = lambda df_: (
-                           ((df_.target_diff * -1 * df_.portfolio_market_value + 
-                                df_.market_value) / df_.price )
-                                .map(int)),
-                        all_shares_to_invest_frac = lambda df_: (
-                           ((df_.target_diff * -1 * df_.portfolio_market_value + 
-                                df_.market_value) / df_.price ))
-                        )
-                # .rename(columns=holdings_columns)
-                .loc[:,list(holdings_columns.keys())]
-                # .style.format(precision=2,thousands=",")
-            )
-        return df
-    def cash():
-        cash_columns = {
-        "account_name": "Account",
-        "cash": "Investable Cash ($)",
-        }
-        df = db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
-        df = (df.assign(cash = df.cash)
-                # .rename(columns = cash_columns)
-                .loc[:,list(cash_columns.keys())]
-                # .style.format(precision=2,thousands=",")
-            )
-        return df
-
-    def holding_v2():
         return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
     
     def dynamic_invest(account, cash, df_):
@@ -212,11 +168,17 @@ class Portfolio():
                                     .to_list()
                                 )  
 
-
+        # TO DO 
         # dataframe columns (symbol,price,target_dif) {account: [cash,df_]}
         # investable cash per account, single value for all account
         # symbol, price,
         # add to whole shares to buy
         # call function again but subtract out price that it took to buy shared
         # have to run the loop for each separate account
+        # TO DO: for dynamic there is going to be left over cash
+        # Need to calculate total left over cash filter out tickers
+        # where price is > then total left over cash then order by
+        # tickers that are the most underweight and buy 1 more share
+        # recursively call this function until not enough cash left 
+        # to buy one share of another stock
         pass
