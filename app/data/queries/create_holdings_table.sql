@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS holdings(
-    user_id         TEXT,
     account_name    TEXT,
     ticker          TEXT,
     security_name   TEXT,
