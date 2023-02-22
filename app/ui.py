@@ -26,7 +26,7 @@ class Sidebar():
         return is_frac_shares
 
     def radio():
-        input_method = st.radio("Input Method",('Manual', 'File'))
+        input_method = st.radio("Input Method",('File','Manual'))
         return input_method
 
 class CashInput():
