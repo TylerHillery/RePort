@@ -1,12 +1,10 @@
 import streamlit as st
 
-from database import SQLite, DuckEngine, get_query_string
+from database import DuckDB, get_query_string
 
-PORTFOLIO_DB = "data/portfolio.db"
 QUERIES_DIR = "app/data/queries/"
 
-db = SQLite(PORTFOLIO_DB)
-duck_engine = DuckEngine(PORTFOLIO_DB)
+db = DuckDB()
 
 class Sidebar(): 
     def header():
@@ -104,7 +102,7 @@ class HoldingsInput():
             cost,
             price
         )
-        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
+        
         if submitted:
             if operation == "Add":
             # TO DO: Add error handling for invalid values (e.g. 0 shares)
@@ -137,21 +135,19 @@ class Portfolio():
         return df
 
     def holdings():
-        return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
-
-    def future_holdings():
-        return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
+        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
+        return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
 
     def dynamic_invest(account):
 
-        df = Portfolio.future_holdings()
+        df = db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
 
-        cash = duck_engine.fetch(
+        cash = db.fetch(
             f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
             return_df=False
         )[0][0]
         
-        is_cash_left =  bool(duck_engine.fetch(
+        is_cash_left =  bool(db.fetch(
             f"""
             SELECT 
                 * 
@@ -165,7 +161,7 @@ class Portfolio():
         ))
 
         while is_cash_left:
-            ticker,shares,new_cash,cost = duck_engine.fetch(
+            ticker,shares,new_cash,cost = db.fetch(
                 f"""
                 SELECT
                     ticker,
@@ -184,7 +180,7 @@ class Portfolio():
                 return_df=False
             )[0]
 
-            duck_engine.query(
+            db.query(
                 """
                 UPDATE future_holdings SET
                     shares = ?,
@@ -196,7 +192,7 @@ class Portfolio():
                 [(shares, cost, account, ticker)]
             )
 
-            duck_engine.query(
+            db.query(
                 """
                 UPDATE future_cash SET
                     cash = ? 
@@ -206,14 +202,14 @@ class Portfolio():
                 [(new_cash, account)]
             )
         
-            df = Portfolio.future_holdings()
+            df = db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
 
-            cash = duck_engine.fetch(
+            cash = db.fetch(
                 f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
                 return_df=False
             )[0][0]
             
-            is_cash_left =  bool(duck_engine.fetch(
+            is_cash_left =  bool(db.fetch(
                 f"""
                 SELECT 
                     * 
@@ -229,10 +225,11 @@ class Portfolio():
         return
     
     def create_future_holdings(rebalance_type, is_frac_shares):
-        df = duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
 
-        duck_engine.fetch("DROP TABLE IF EXISTS future_holdings")
-        duck_engine.fetch("DROP TABLE IF EXISTS future_cash")
+        df = db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+
+        db.fetch("DROP TABLE IF EXISTS future_holdings")
+        db.fetch("DROP TABLE IF EXISTS future_cash")
 
         if rebalance_type   == "Investable Cash Dynamic" and is_frac_shares:
             column = 'dynamic_shares_to_invest_frac'
@@ -263,9 +260,9 @@ class Portfolio():
             )
        """)
 
-        duck_engine.fetch(sql)
+        db.fetch(sql)
 
-        duck_engine.fetch(f"""
+        db.fetch(f"""
         CREATE TABLE future_cash as ( 
             SELECT 
                 account_name, 
@@ -276,10 +273,14 @@ class Portfolio():
        """)
 
         if rebalance_type == "Investable Cash Dynamic" and not is_frac_shares:
-            accounts = list(map(lambda _tup: str(_tup[0]), duck_engine.fetch(
+            accounts = list(map(lambda _tup: str(_tup[0]), db.fetch(
             "SELECT DISTINCT account_name FROM cash",
             return_df=False
                 )))
                 
             map(Portfolio.dynamic_invest, accounts)
         return
+    
+    def future_holdings(rebalance_type, is_frac_shares):
+        Portfolio.create_future_holdings(rebalance_type, is_frac_shares)
+        return db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))

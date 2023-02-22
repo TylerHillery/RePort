@@ -1,20 +1,14 @@
 import streamlit as st
 
-from database import SQLite, DuckEngine
 from ui import Sidebar, HoldingsInput, CashInput, Portfolio
 
-PORTFOLIO_DB = "data/portfolio.db"
-QUERIES_DIR = "app/data/queries/"
-
-db = SQLite(PORTFOLIO_DB)
-duck_engine = DuckEngine(PORTFOLIO_DB)
 st.set_page_config(layout="wide")
 
 with st.sidebar:
     Sidebar.header()
     rebalance_type  = Sidebar.select_box()
     is_frac_shares  = Sidebar.check_box()
-    Portfolio.create_future_holdings(rebalance_type,is_frac_shares)
+
 
 with st.container():
     st.title("RePort ⚖️")
@@ -32,4 +26,4 @@ with st.container():
     Portfolio.header()
     st.table(Portfolio.holdings())
     st.table(Portfolio.cash())
-    st.table(Portfolio.future_holdings())
+    st.table(Portfolio.future_holdings(rebalance_type,is_frac_shares))
