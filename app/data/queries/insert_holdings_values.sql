@@ -1,5 +1,6 @@
 INSERT INTO 
     holdings(
+        holding_id,
         account_name,
         ticker,
         shares,
@@ -7,4 +8,4 @@ INSERT INTO
         cost,
         price
     ) 
-VALUES (?,?,?,?,?,?)
+VALUES (?,?,?,?,?,?,?)

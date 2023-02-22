@@ -1,6 +1,7 @@
-import streamlit as st
+from hashlib import md5
 
 import pandas as pd
+import streamlit as st
 
 from database import DuckDB, get_query_string
 
@@ -93,7 +94,14 @@ class HoldingsInput():
         df = pd.read_csv(uploaded_data) 
 
         db.query("DELETE FROM holdings")
-        db.query("INSERT INTO holdings SELECT * FROM df")
+        db.query("""
+        INSERT INTO
+             holdings 
+        SELECT 
+            md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
+            * 
+        FROM df
+        """)
         return None 
 
     def form():
@@ -130,6 +138,7 @@ class HoldingsInput():
 
         data = (
             operation,
+            md5((account.strip() + ticker.strip()).lower().encode('utf-8')).hexdigest(),
             account.strip(),
             ticker.strip(),
             shares,
@@ -142,9 +151,9 @@ class HoldingsInput():
             if operation == "Add":
                 parms = [data[1:]]
             if operation == "Delete":
-                parms = [data[1:3]]
+                parms = [(data[1],)]
             if operation == "Update":
-                parms = [data[1:] + data[1:3]]
+                parms = [data[4:] + (data[1],)]
             
             db.crud(operation,'holdings',parms)
         
@@ -161,6 +170,9 @@ class Portfolio():
 
     def get_holdings_table(): 
         return db.fetch(get_query_string('select_holdings'))
+
+    def get_raw_holdings_table():
+        return db.fetch("SELECT * FROM holdings ORDER BY ticker")
 
     def get_accounts():
         accounts = list(map(lambda _tup: str(_tup[0]), db.fetch(

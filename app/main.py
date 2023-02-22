@@ -22,9 +22,9 @@ with st.expander("Input"):
     if input_method == "Manual":
         tab1, tab2 = st.tabs(["Holdings", "Cash"])
         with tab1:
-            operation,account,ticker,shares,target,cost,price = HoldingsInput.form()
+            HoldingsInput.form()
         with tab2:
-            operation,account,cash = CashInput.form()
+            CashInput.form()
     elif input_method == "File":
         tab1, tab2 = st.tabs(["Holdings", "Cash"])
         with tab1:
