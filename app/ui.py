@@ -1,5 +1,7 @@
 import streamlit as st
 
+import pandas as pd
+
 from database import DuckDB, get_query_string
 
 db = DuckDB()
@@ -23,7 +25,30 @@ class Sidebar():
         is_frac_shares = st.checkbox("Allow fractional share investing?")
         return is_frac_shares
 
+    def radio():
+        input_method = st.radio("Input Method",('Manual', 'File'))
+        return input_method
+
 class CashInput():
+    def file():
+        uploaded_data = st.file_uploader(
+        "Drag and Drop Cash File or Click to Upload", type=".csv", 
+        accept_multiple_files=False
+        )
+
+        if uploaded_data is None:
+            st.info("Using example data. Upload a file above to use your own data!")
+            uploaded_data = "app/example_cash.csv"
+        else:
+            st.success("Uploaded your file!")
+            uploaded_data = uploaded_data
+
+        df = pd.read_csv(uploaded_data) 
+
+        db.query("DELETE FROM cash")
+        db.query("INSERT INTO cash SELECT * FROM df")
+        return None
+
     def form():
         form  = st.form("cash_input")
         c1, c2, c3  = form.columns((1.5,1.5,1.5))
@@ -51,7 +76,26 @@ class CashInput():
         return data
         
 
-class HoldingsInput():    
+class HoldingsInput():   
+    def file():
+        uploaded_data = st.file_uploader(
+        "Drag and Drop Holdings File or Click to Upload", type=".csv",
+        accept_multiple_files=False
+        )
+
+        if uploaded_data is None:
+            st.info("Using example data. Upload a file above to use your own data!")
+            uploaded_data = "app/example_holdings.csv"
+        else:
+            st.success("Uploaded your file!")
+            uploaded_data = uploaded_data
+
+        df = pd.read_csv(uploaded_data) 
+
+        db.query("DELETE FROM holdings")
+        db.query("INSERT INTO holdings SELECT * FROM df")
+        return None 
+
     def form():
         form  = st.form("holdings_input")
         row_1 = form.container()
@@ -124,7 +168,7 @@ class Portfolio():
             return_df=False
                 )))
         return accounts 
-        
+
     def dynamic_invest(account):
 
         df = db.fetch(get_query_string('select_future_holdings'))
