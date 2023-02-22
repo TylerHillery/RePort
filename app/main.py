@@ -1,8 +1,10 @@
 import streamlit as st
 
-from ui import Sidebar, HoldingsInput, CashInput, Portfolio
+from ui import Sidebar, HoldingsInput, CashInput,Portfolio
 
 st.set_page_config(layout="wide")
+
+Portfolio.create_tables()
 
 with st.sidebar:
     Sidebar.header()
@@ -23,7 +25,9 @@ with st.expander("Input"):
          operation,account,cash = CashInput.form()
 
 with st.container():    
-    Portfolio.header()
-    st.table(Portfolio.holdings())
-    st.table(Portfolio.cash())
-    st.table(Portfolio.future_holdings(rebalance_type,is_frac_shares))
+    st.markdown("#### **Portfolio**")
+    st.table(Portfolio.get_holdings_table())
+    st.table(Portfolio.get_cash_table())
+    st.table(Portfolio.get_future_holdings_table(rebalance_type,is_frac_shares))
+
+    st.write(Portfolio.get_accounts())

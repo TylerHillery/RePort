@@ -2,8 +2,6 @@ import streamlit as st
 
 from database import DuckDB, get_query_string
 
-QUERIES_DIR = "app/data/queries/"
-
 db = DuckDB()
 
 class Sidebar(): 
@@ -39,24 +37,17 @@ class CashInput():
             account.strip(),
             cash
         )
-        db.query(get_query_string(QUERIES_DIR + 'create_cash_table')) 
+
         if submitted:
             if operation == "Add":
-            # TO DO: Add error handling for invalid values (e.g. 0 shares)
-                db.query(
-                    get_query_string(QUERIES_DIR + "insert_cash_values"), 
-                    [data[1:]]
-                )
+                parms = [data[1:]]
             if operation == "Delete":
-                db.query(
-                    get_query_string(QUERIES_DIR + "delete_cash"), 
-                    [(data[1],)]
-                )
+                parms = [(data[1],)]
             if operation == "Update":
-                db.query(
-                    get_query_string(QUERIES_DIR + "update_cash"), 
-                    [data[:0:-1],]
-                )
+                parms = [data[:0:-1],]
+
+            db.crud(operation,'cash',parms)
+
         return data
         
 
@@ -105,42 +96,38 @@ class HoldingsInput():
         
         if submitted:
             if operation == "Add":
-            # TO DO: Add error handling for invalid values (e.g. 0 shares)
-                db.query(
-                    get_query_string(QUERIES_DIR + "insert_holdings_values"), 
-                    [data[1:]]
-                )
+                parms = [data[1:]]
             if operation == "Delete":
-                db.query(
-                    get_query_string(QUERIES_DIR + "delete_holding"), 
-                    [data[1:3]]
-                )
+                parms = [data[1:3]]
             if operation == "Update":
-                db.query(
-                    get_query_string(QUERIES_DIR + "update_holding"), 
-                    [data[1:] + data[1:3]]
-                )
+                parms = [data[1:] + data[1:3]]
+            
+            db.crud(operation,'holdings',parms)
+        
         return data
 
 class Portfolio():     
-    def header():
-        st.markdown("#### **Portfolio**")
-    def cash():
-        cash_columns = {
-        "account_name": "Account",
-        "cash": "Investable Cash ($)",
-        }
-        df = (db.fetch(get_query_string(QUERIES_DIR + 'select_cash'))
-                .loc[:,list(cash_columns.keys())])
+    def create_tables():
+        db.query(get_query_string('create_holdings_table')) 
+        db.query(get_query_string('create_cash_table')) 
+        
+    def get_cash_table():
+        df = (db.fetch(get_query_string('select_cash')))
         return df
 
-    def holdings():
-        db.query(get_query_string(QUERIES_DIR + 'create_holdings_table')) 
-        return db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+    def get_holdings_table(): 
+        return db.fetch(get_query_string('select_holdings'))
 
+    def get_accounts():
+        accounts = list(map(lambda _tup: str(_tup[0]), db.fetch(
+            "SELECT DISTINCT account_name FROM cash",
+            return_df=False
+                )))
+        return accounts 
+        
     def dynamic_invest(account):
 
-        df = db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
+        df = db.fetch(get_query_string('select_future_holdings'))
 
         cash = db.fetch(
             f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
@@ -202,7 +189,7 @@ class Portfolio():
                 [(new_cash, account)]
             )
         
-            df = db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
+            df = db.fetch(get_query_string('select_future_holdings'))
 
             cash = db.fetch(
                 f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
@@ -226,7 +213,7 @@ class Portfolio():
     
     def create_future_holdings(rebalance_type, is_frac_shares):
 
-        df = db.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+        df = db.fetch(get_query_string('select_holdings'))
 
         db.fetch("DROP TABLE IF EXISTS future_holdings")
         db.fetch("DROP TABLE IF EXISTS future_cash")
@@ -281,6 +268,6 @@ class Portfolio():
             map(Portfolio.dynamic_invest, accounts)
         return
     
-    def future_holdings(rebalance_type, is_frac_shares):
+    def get_future_holdings_table(rebalance_type, is_frac_shares):
         Portfolio.create_future_holdings(rebalance_type, is_frac_shares)
-        return db.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
+        return db.fetch(get_query_string('select_future_holdings'))
