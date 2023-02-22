@@ -8,10 +8,10 @@ Portfolio.create_tables()
 
 with st.sidebar:
     Sidebar.header()
-    rebalance_type  = Sidebar.select_box()
-    is_frac_shares  = Sidebar.check_box()
     input_method = Sidebar.radio()
-
+    rebalance_type  = Sidebar.select_box()
+    is_frac_shares  = Sidebar.check_box_frac_shares()
+    add_sample_data  = Sidebar.check_box_sample_data()
 
 with st.container():
     st.title("RePort ⚖️")
@@ -37,5 +37,3 @@ with st.container():
     st.table(Portfolio.get_holdings_table())
     st.table(Portfolio.get_cash_table())
     st.table(Portfolio.get_future_holdings_table(rebalance_type,is_frac_shares))
-
-    st.write(Portfolio.get_accounts())

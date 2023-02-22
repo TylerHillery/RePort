@@ -11,6 +11,10 @@ class Sidebar():
     def header():
         st.header("Configurations")
     
+    def radio():
+        input_method = st.radio("Input Method",('File','Manual'))
+        return input_method
+    
     def select_box():
         rebalance_type = st.selectbox(
             "Select Rebalance Type",
@@ -22,13 +26,39 @@ class Sidebar():
         )
         return rebalance_type
     
-    def check_box():
+    def check_box_frac_shares():
         is_frac_shares = st.checkbox("Allow fractional share investing?")
         return is_frac_shares
+    
+    def check_box_sample_data():
+        def add_sample_data():
+            if st.session_state.add_sample_data:
+                db.query("DELETE FROM cash")
+                db.query("DELETE FROM holdings")
+                db.query(
+                    "INSERT INTO cash SELECT * FROM read_csv_auto('app/example_cash.csv')"
+                )        
+                db.query("""
+                INSERT INTO
+                    holdings 
+                SELECT 
+                    md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
+                    * 
+                FROM 
+                    read_csv_auto('app/example_holdings.csv')
+                """)
+            else:
+                db.query("DELETE FROM cash")
+                db.query("DELETE FROM holdings")
 
-    def radio():
-        input_method = st.radio("Input Method",('File','Manual'))
-        return input_method
+        add_sample_data = st.checkbox(
+            "Add sample data?",
+            help="Warning: This will delete all current data!",
+            on_change= add_sample_data,
+            key="add_sample_data"
+        )
+        
+        return add_sample_data
 
 class CashInput():
     def file():
@@ -37,17 +67,14 @@ class CashInput():
         accept_multiple_files=False
         )
 
-        if uploaded_data is None:
-            st.info("Using example data. Upload a file above to use your own data!")
-            uploaded_data = "app/example_cash.csv"
-        else:
+        if uploaded_data is not None:
             st.success("Uploaded your file!")
             uploaded_data = uploaded_data
 
-        df = pd.read_csv(uploaded_data) 
+            df = pd.read_csv(uploaded_data) 
 
-        db.query("DELETE FROM cash")
-        db.query("INSERT INTO cash SELECT * FROM df")
+            db.query("DELETE FROM cash")
+            db.query("INSERT INTO cash SELECT * FROM df")
         return None
 
     def form():
@@ -83,25 +110,21 @@ class HoldingsInput():
         "Drag and Drop Holdings File or Click to Upload", type=".csv",
         accept_multiple_files=False
         )
-
-        if uploaded_data is None:
-            st.info("Using example data. Upload a file above to use your own data!")
-            uploaded_data = "app/example_holdings.csv"
-        else:
+        if uploaded_data is not None:
             st.success("Uploaded your file!")
             uploaded_data = uploaded_data
 
-        df = pd.read_csv(uploaded_data) 
+            df = pd.read_csv(uploaded_data) 
 
-        db.query("DELETE FROM holdings")
-        db.query("""
-        INSERT INTO
-             holdings 
-        SELECT 
-            md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
-            * 
-        FROM df
-        """)
+            db.query("DELETE FROM holdings")
+            db.query("""
+            INSERT INTO
+                holdings 
+            SELECT 
+                md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
+                * 
+            FROM df
+            """)
         return None 
 
     def form():
