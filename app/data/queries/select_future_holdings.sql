@@ -1,22 +1,22 @@
 WITH 
 market_value as (
     SELECT
-        holdings.account_name,
-        holdings.ticker,
-        holdings.security_name,
-        holdings.target_weight,
-        holdings.price * holdings.shares / 
-            (sum(holdings.price * holdings.shares) OVER (PARTITION BY holdings.account_name) + coalesce(cash.cash,0)) * 100 as current_weight,
-        holdings.shares,
-        holdings.cost,
-        holdings.price,
-        holdings.price * holdings.shares as market_value,
-        cash.cash,
-        sum(holdings.price * holdings.shares) OVER (PARTITION BY holdings.account_name) + coalesce(cash.cash,0) as portfolio_market_value
+        future_holdings.account_name,
+        future_holdings.ticker,
+        future_holdings.security_name,
+        future_holdings.target_weight,
+        future_holdings.price * future_holdings.shares / 
+            (sum(future_holdings.price * future_holdings.shares) OVER (PARTITION BY future_holdings.account_name) + coalesce(future_cash.cash,0)) * 100 as current_weight,
+        future_holdings.shares,
+        future_holdings.cost,
+        future_holdings.price,
+        future_holdings.price * future_holdings.shares as market_value,
+        future_cash.cash,
+        sum(future_holdings.price * future_holdings.shares) OVER (PARTITION BY future_holdings.account_name) + coalesce(future_cash.cash,0) as portfolio_market_value
     FROM 
-        holdings
-        LEFT JOIN cash
-            ON holdings.account_name = cash.account_name
+        future_holdings
+        LEFT JOIN future_cash
+            ON future_holdings.account_name = future_cash.account_name
 ),
 gain_loss AS (
     SELECT

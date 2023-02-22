@@ -138,25 +138,148 @@ class Portfolio():
 
     def holdings():
         return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
-    
-    def dynamic_invest(account, cash, df_):
-        symbol,price,target_diff = (df_[(df_.price <= cash)]
-                                    .sort_values(by=['target_df'],ascending=False)
-                                    .iloc[0]
-                                    .to_list()
-                                )  
 
-        # TO DO 
-        # dataframe columns (symbol,price,target_dif) {account: [cash,df_]}
-        # investable cash per account, single value for all account
-        # symbol, price,
-        # add to whole shares to buy
-        # call function again but subtract out price that it took to buy shared
-        # have to run the loop for each separate account
-        # TO DO: for dynamic there is going to be left over cash
-        # Need to calculate total left over cash filter out tickers
-        # where price is > then total left over cash then order by
-        # tickers that are the most underweight and buy 1 more share
-        # recursively call this function until not enough cash left 
-        # to buy one share of another stock
-        pass
+    def future_holdings():
+        return duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_future_holdings'))
+
+    def dynamic_invest(account):
+
+        df = Portfolio.future_holdings()
+
+        cash = duck_engine.fetch(
+            f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
+            return_df=False
+        )[0][0]
+        
+        is_cash_left =  bool(duck_engine.fetch(
+            f"""
+            SELECT 
+                * 
+            FROM 
+                df 
+            WHERE
+                price <= {cash}
+                AND account_name = '{account}'
+            """,
+            return_df=False
+        ))
+
+        while is_cash_left:
+            ticker,shares,new_cash,cost = duck_engine.fetch(
+                f"""
+                SELECT
+                    ticker,
+                    dynamic_shares_to_invest_whole + 1 + shares,
+                    cash - price as new_cash,
+                    cost + (( dynamic_shares_to_invest_whole + 1)* price) as cost
+                FROM 
+                    df
+                WHERE
+                    price <= {cash}
+                    AND account_name = '{account}'
+                ORDER BY
+                    target_diff
+                Limit 1
+                """,
+                return_df=False
+            )[0]
+
+            duck_engine.query(
+                """
+                UPDATE future_holdings SET
+                    shares = ?,
+                    cost = ?
+                WHERE
+                    account_name    = ?
+                AND ticker          = ?
+                """,
+                [(shares, cost, account, ticker)]
+            )
+
+            duck_engine.query(
+                """
+                UPDATE future_cash SET
+                    cash = ? 
+                WHERE
+                    account_name    = ?
+                """,
+                [(new_cash, account)]
+            )
+        
+            df = Portfolio.future_holdings()
+
+            cash = duck_engine.fetch(
+                f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
+                return_df=False
+            )[0][0]
+            
+            is_cash_left =  bool(duck_engine.fetch(
+                f"""
+                SELECT 
+                    * 
+                FROM 
+                    df 
+                WHERE
+                    price <= {cash}
+                    AND account_name = '{account}'
+                """,
+                return_df=False
+            ))
+
+        return
+    
+    def create_future_holdings(rebalance_type, is_frac_shares):
+        df = duck_engine.fetch(get_query_string(QUERIES_DIR + 'select_holdings'))
+
+        duck_engine.fetch("DROP TABLE IF EXISTS future_holdings")
+        duck_engine.fetch("DROP TABLE IF EXISTS future_cash")
+
+        if rebalance_type   == "Investable Cash Dynamic" and is_frac_shares:
+            column = 'dynamic_shares_to_invest_frac'
+        elif rebalance_type == "Investable Cash Dynamic" and not is_frac_shares:
+            column = 'dynamic_shares_to_invest_whole'
+        elif rebalance_type   == "Investable Cash Target" and is_frac_shares:
+            column = 'target_shares_to_invest_frac'
+        elif rebalance_type == "Investable Cash Target" and not is_frac_shares:
+            column = 'target_shares_to_invest_whole'
+        elif rebalance_type   == "Whole Portfolio" and is_frac_shares:
+            column = 'all_shares_to_invest_frac'
+        elif rebalance_type == "Whole Portfolio" and not is_frac_shares:
+            column = 'all_shares_to_invest_whole'
+        else:
+            None
+
+        sql = (f"""
+        CREATE TABLE future_holdings as (
+            SELECT 
+                account_name,   
+                ticker,         
+                security_name,  
+                shares + {column} as shares,        
+                target_weight,  
+                cost + ({column} * price) as cost,           
+                price
+             FROM df 
+            )
+       """)
+
+        duck_engine.fetch(sql)
+
+        duck_engine.fetch(f"""
+        CREATE TABLE future_cash as ( 
+            SELECT 
+                account_name, 
+                max(cash) - sum({column} * price) as cash 
+             FROM df 
+             GROUP BY 1
+            )
+       """)
+
+        if rebalance_type == "Investable Cash Dynamic" and not is_frac_shares:
+            accounts = list(map(lambda _tup: str(_tup[0]), duck_engine.fetch(
+            "SELECT DISTINCT account_name FROM cash",
+            return_df=False
+                )))
+                
+            map(Portfolio.dynamic_invest, accounts)
+        return
