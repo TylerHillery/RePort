@@ -1,4 +1,4 @@
-INSERT INTO 
+INSERT OR REPLACE INTO 
     holdings(
         holding_id,
         account_name,

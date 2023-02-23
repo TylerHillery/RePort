@@ -35,9 +35,14 @@ class Sidebar():
             if st.session_state.add_sample_data:
                 db.query("DELETE FROM cash")
                 db.query("DELETE FROM holdings")
-                db.query(
-                    "INSERT INTO cash SELECT * FROM read_csv_auto('app/example_cash.csv')"
-                )        
+                db.query("""
+                INSERT INTO 
+                    cash 
+                SELECT 
+                    * 
+                FROM
+                    read_csv_auto('app/example_cash.csv')
+                """)        
                 db.query("""
                 INSERT INTO
                     holdings 

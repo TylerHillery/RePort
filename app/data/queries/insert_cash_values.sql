@@ -1,6 +1,6 @@
-INSERT INTO 
+INSERT OR REPLACE INTO
     cash(
         account_name,
         cash
     ) 
-VALUES (?,?)
+VALUES(?,?)
