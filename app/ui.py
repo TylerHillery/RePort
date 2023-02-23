@@ -41,7 +41,7 @@ class Sidebar():
                 SELECT 
                     * 
                 FROM
-                    read_csv_auto('app/example_cash.csv')
+                    read_csv_auto('app/data/example_cash.csv')
                 """)        
                 db.query("""
                 INSERT INTO
@@ -50,7 +50,7 @@ class Sidebar():
                     md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
                     * 
                 FROM 
-                    read_csv_auto('app/example_holdings.csv')
+                    read_csv_auto('app/data/example_holdings.csv')
                 """)
             else:
                 db.query("DELETE FROM cash")
