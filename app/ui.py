@@ -134,19 +134,12 @@ class Portfolio():
                 df
             """)
         return
-    
-    def get_cash_table():
-        df = (db.fetch(get_query_string('select_cash')))
-        return df
-
-    def get_holdings_table(): 
-        return db.fetch(get_query_string('select_holdings'))
 
     def get_raw_holdings_table():
-        return db.fetch("SELECT account_name,ticker,security_name,shares,target_weight,cost,price FROM holdings ORDER BY account_name,ticker")
+        return db.fetch(get_query_string("select_raw_holdings"))
     
     def get_raw_cash_table():
-        return db.fetch("SELECT account_name,cash FROM cash ORDER BY account_name")
+        return db.fetch(get_query_string("select_raw_cash"))
 
     def get_accounts():
         accounts = list(map(lambda _tup: str(_tup[0]), db.fetch(
@@ -154,9 +147,6 @@ class Portfolio():
             return_df=False
                 )))
         return accounts 
-
-    def get_account_cash(account: str) -> float: 
-        return db.fetch(f"SELECT cash FROM cash WHERE account_name = '{account}'",return_df=False)[0][0]
 
     def dynamic_invest(account):
         df = db.fetch(get_query_string('select_future_holdings'))
@@ -301,15 +291,6 @@ class Portfolio():
                 Portfolio.dynamic_invest(account)
         return
     
-    def get_future_holdings_table(rebalance_type, is_frac_shares):
-        Portfolio.create_future_holdings(rebalance_type, is_frac_shares)
-        return db.fetch(get_query_string('select_future_holdings'))
-    
-    def get_account_future_cash(account: str,rebalance_type, is_frac_shares) -> float: 
-        df = Portfolio.get_future_holdings_table(rebalance_type, is_frac_shares)
-        return db.fetch(f"SELECT max(cash) FROM df WHERE account_name = '{account}'",return_df=False)[0][0]
-
-    
     def get_holdings_df_filtered(accounts, index):
         raw_holdings_df = db.fetch(get_query_string("select_holdings"))
         raw_future_holdings_df = db.fetch(get_query_string("select_future_holdings"))
@@ -345,7 +326,8 @@ class Portfolio():
                                            .get_holdings_df_filtered(accounts,index)
                                         )
         cash = db.fetch("SELECT max(cash) FROM holdings_df",return_df=False)[0][0]
-        future_cash = db.fetch("SELECT max(cash) FROM future_holdings_df",return_df=False)[0][0]
+        future_cash = db.fetch("SELECT max(cash) FROM future_holdings_df",
+                               return_df=False)[0][0]
         future_cash_formatted = f"${future_cash:,.2f}"
         cash_delta = f"{future_cash - cash:,.2f}"
         column.metric("Investable Cash After Rebalance",
@@ -373,7 +355,8 @@ class Portfolio():
         holdings_df, future_holdings_df = (Portfolio
                                     .get_holdings_df_filtered(accounts,index)
                                 )
-        gain_loss_pct = db.fetch("SELECT (sum(market_value) - sum(cost))/sum(cost) FROM holdings_df",
+        gain_loss_pct = db.fetch("SELECT (sum(market_value) - sum(cost))/sum(cost) " +
+                                 "FROM holdings_df",
                                  return_df=False)[0][0]
         gain_loss_pct_formatted = f"{gain_loss_pct*100:,.2f}%"
         column.metric("Account Gain/Loss (%)",gain_loss_pct_formatted)
@@ -414,7 +397,12 @@ class Portfolio():
                             "current_weight": "Current Weight",
                             "target_diff"   : "Target Diff"
                         } 
-        column.markdown("**Before Rebalance**")
+        column.markdown(            
+            '<div style="text-align: center;">' +
+            '<strong>Before  Rebalance </strong>' +
+            '</div>',
+             unsafe_allow_html=True
+            )
         column.dataframe(holdings_df.loc[:,list(holdings_df_columns.keys())]
                         .rename(columns=holdings_df_columns)
                         .style
@@ -450,7 +438,12 @@ class Portfolio():
                             "current_weight": "Current Weight",
                             "target_diff"   : "Target Diff"
                         } 
-        column.markdown("**After Rebalance**")
+        column.markdown(            
+            '<div style="text-align: center;">' +
+            '<strong>After Rebalance </strong>' +
+            '</div>',
+            unsafe_allow_html=True
+            )
         column.dataframe(future_holdings_df.loc[:,list(holdings_df_columns.keys())]
                         .rename(columns=holdings_df_columns)
                         .style
@@ -480,7 +473,7 @@ class Portfolio():
             vega_chart = json.load(file)
 
         column.markdown(
-            '<div style="text-align: center;">' +
+            '<div style="text-align: left;">' +
             '<strong>Comparison of Target Weight Differences Before vs ' +
             'After Rebalance</strong>' +
             '</div>',
@@ -499,7 +492,7 @@ class Portfolio():
         orders_df = db.fetch(get_query_string("select_orders"))
 
         column.markdown(
-            '<div style="text-align: center;">' +
+            '<div style="text-align: left;">' +
             '<strong>Orders Needed For Rebalance</strong>' +
             '</div>',
             unsafe_allow_html=True)
