@@ -2,7 +2,10 @@ import streamlit as st
 
 from ui import Sidebar,HoldingsInput,CashInput,Portfolio
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    page_title="RePort",
+    page_icon="⚖️")
 
 with st.sidebar:
     Sidebar.header()
