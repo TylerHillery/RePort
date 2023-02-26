@@ -47,28 +47,45 @@ with st.container():
             with container:
                 with st.container():
                     c1,c2,c3,c4 = st.columns([2,2,2,2,])
-                    holdings_df = Portfolio.get_holdings_table()
-                    future_holdings_df = Portfolio.get_future_holdings_table(rebalance_type,is_frac_shares)
+                    raw_holdings_df = Portfolio.get_holdings_table()
+                    raw_future_holdings_df = Portfolio.get_future_holdings_table(rebalance_type,is_frac_shares)
 
-                    cash = duckdb.query(f"SELECT max(cash) FROM holdings_df WHERE account_name = '{accounts[index]}'").fetchall()[0][0]
+                    holdings_df = duckdb.query(
+                        f"""
+                        SELECT *
+                        FROM raw_holdings_df
+                        WHERE account_name = '{accounts[index]}'
+                        """
+                    ).df()
+                    
+                    future_holdings_df = duckdb.query(
+                        f"""
+                        SELECT *
+                        FROM raw_future_holdings_df
+                        WHERE account_name = '{accounts[index]}'
+                        """
+                    ).df()
+
+
+                    cash = duckdb.query(f"SELECT max(cash) FROM holdings_df").fetchall()[0][0]
                     cash_formatted = f"${cash:,.2f}"
                     c1.metric("Investable Cash",cash_formatted)
 
 
-                    future_cash = duckdb.query(f"SELECT max(cash) FROM future_holdings_df WHERE account_name = '{accounts[index]}'").fetchall()[0][0]
+                    future_cash = duckdb.query(f"SELECT max(cash) FROM future_holdings_df").fetchall()[0][0]
                     future_cash_formatted = f"${future_cash:,.2f}"
                     
                     cash_delta = f"{future_cash - cash:,.2f}"
                     c2.metric("Investable Cash After Rebalance",future_cash_formatted,delta=cash_delta)
 
-                    market_value = duckdb.query(f"SELECT sum(market_value) FROM holdings_df WHERE account_name = '{accounts[index]}'").fetchall()[0][0]
+                    market_value = duckdb.query(f"SELECT sum(market_value) FROM holdings_df").fetchall()[0][0]
                     market_value_formatted = f"${market_value:,.2f}"
 
-                    gain_loss = duckdb.query(f"SELECT sum(market_value) - sum(cost) FROM holdings_df WHERE account_name = '{accounts[index]}'").fetchall()[0][0]
+                    gain_loss = duckdb.query(f"SELECT sum(market_value) - sum(cost) FROM holdings_df").fetchall()[0][0]
                     gain_loss_formatted = f"{gain_loss:,.2f}"
                     c3.metric("Account Market Value",market_value_formatted, delta=gain_loss_formatted)
 
-                    gain_loss_pct = duckdb.query(f"SELECT (sum(market_value) - sum(cost))/sum(cost) FROM holdings_df WHERE account_name = '{accounts[index]}'").fetchall()[0][0]
+                    gain_loss_pct = duckdb.query(f"SELECT (sum(market_value) - sum(cost))/sum(cost) FROM holdings_df").fetchall()[0][0]
                     gain_loss_pct_formatted = f"{gain_loss_pct*100:,.2f}%"
                     c4.metric("Account Gain/Loss (%)",gain_loss_pct_formatted)
                 
