@@ -14,14 +14,15 @@ with st.sidebar:
 
 with st.container():
     st.title("RePort ⚖️")
-    st.text("A portfolio rebalancing tool to help investors " +
-    "get their positions back to target weights.")
+    st.text(
+        "A portfolio rebalancing tool to help investors " +
+        "get their positions back to target weights."
+        )
 
 with st.expander("Input"):
     if input_method == "Manual":
         tab1, tab2 = st.tabs(["Holdings", "Cash"])
         with tab1:
-            # HoldingsInput.form()
             holdings_df = Portfolio.get_raw_holdings_table()
             edit_holdings_df = st.experimental_data_editor(holdings_df, key='edit_holdings',num_rows="dynamic")
             Portfolio.update_tables('holdings',edit_holdings_df)
@@ -45,10 +46,18 @@ with st.container():
         for index,container in enumerate(st.tabs(accounts)):
             with container:
                 with st.container():
-                    Portfolio.metrics(accounts,index)
+                    c1,c2,c3,c4 = st.columns([2,2,2,2,])
+                    Portfolio.investable_cash_metric(accounts,index,c1)
+                    Portfolio.future_cash_metric(accounts,index,c2)
+                    Portfolio.market_value_metric(accounts,index,c3)
+                    Portfolio.gain_loss_metric(accounts,index,c4)
                 
                 with st.container():
-                   Portfolio.dataframes(accounts,index)
+                    c1, c2 = st.columns([2,2])
+                    Portfolio.holdings_df_styled(accounts, index, c1)
+                    Portfolio.future_holdings_df_styled(accounts, index, c2)
 
                 with st.container():
-                    Portfolio.visuals(accounts,index)
+                    c1,c2 = st.columns([7,3])
+                    Portfolio.grouped_bar_chart(accounts,index,c1)
+                    Portfolio.orders_df_styled(accounts,index,c2)

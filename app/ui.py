@@ -1,4 +1,4 @@
-from hashlib import md5
+import json
 
 import pandas as pd
 import streamlit as st
@@ -309,8 +309,8 @@ class Portfolio():
         df = Portfolio.get_future_holdings_table(rebalance_type, is_frac_shares)
         return db.fetch(f"SELECT max(cash) FROM df WHERE account_name = '{account}'",return_df=False)[0][0]
 
-    def metrics(accounts,index):
-        c1,c2,c3,c4 = st.columns([2,2,2,2,])
+    
+    def get_holdings_df_filtered(accounts, index):
         raw_holdings_df = db.fetch(get_query_string("select_holdings"))
         raw_future_holdings_df = db.fetch(get_query_string("select_future_holdings"))
         holdings_df = db.fetch(
@@ -327,20 +327,36 @@ class Portfolio():
             FROM raw_future_holdings_df
             WHERE account_name = '{accounts[index]}'
             """
-        )
+        )  
+        return holdings_df,future_holdings_df
+    
+    def investable_cash_metric(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
 
         cash = db.fetch("SELECT max(cash) FROM holdings_df",return_df=False)[0][0]
         cash_formatted = f"${cash:,.2f}"
-        c1.metric("Investable Cash",cash_formatted)
-
-
+        column.metric("Investable Cash",cash_formatted)
+        return 
+    
+    def future_cash_metric(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
+        cash = db.fetch("SELECT max(cash) FROM holdings_df",return_df=False)[0][0]
         future_cash = db.fetch("SELECT max(cash) FROM future_holdings_df",return_df=False)[0][0]
         future_cash_formatted = f"${future_cash:,.2f}"
-        
         cash_delta = f"{future_cash - cash:,.2f}"
-        c2.metric("Investable Cash After Rebalance",
+        column.metric("Investable Cash After Rebalance",
                   future_cash_formatted,delta=cash_delta)
+        return None
 
+    def market_value_metric(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
+        
         market_value = db.fetch("SELECT sum(market_value) FROM holdings_df",
                                 return_df=False)[0][0]
         market_value_formatted = f"${market_value:,.2f}"
@@ -348,17 +364,21 @@ class Portfolio():
         gain_loss = db.fetch("SELECT sum(market_value) - sum(cost) FROM holdings_df",
                              return_df=False)[0][0]
         gain_loss_formatted = f"{gain_loss:,.2f}"
-        c3.metric("Account Market Value",
+        column.metric("Account Market Value",
                   market_value_formatted,
                   delta=gain_loss_formatted)
-
+        return None
+    
+    def gain_loss_metric(accounts,index,column): 
+        holdings_df, future_holdings_df = (Portfolio
+                                    .get_holdings_df_filtered(accounts,index)
+                                )
         gain_loss_pct = db.fetch("SELECT (sum(market_value) - sum(cost))/sum(cost) FROM holdings_df",
                                  return_df=False)[0][0]
         gain_loss_pct_formatted = f"{gain_loss_pct*100:,.2f}%"
-        c4.metric("Account Gain/Loss (%)",gain_loss_pct_formatted)
-
+        column.metric("Account Gain/Loss (%)",gain_loss_pct_formatted)
         return None
-
+    
     def color_negative_red(value):
         """
         Colors elements in a date frame
@@ -374,27 +394,13 @@ class Portfolio():
         else:
             color = 'black'
 
-        return f'{color}: %s'
+        return 'color: %s' % color
 
-    def dataframes(accounts,index):
-        c1, c2 = st.columns([2,2])
-        raw_holdings_df = db.fetch(get_query_string("select_holdings"))
-        raw_future_holdings_df = db.fetch(get_query_string("select_future_holdings"))
-        holdings_df = db.fetch(
-            f"""
-            SELECT *
-            FROM raw_holdings_df
-            WHERE account_name = '{accounts[index]}'
-            """
-        )
-        
-        future_holdings_df = db.fetch(
-            f"""
-            SELECT *
-            FROM raw_future_holdings_df
-            WHERE account_name = '{accounts[index]}'
-            """
-        )    
+  
+    def holdings_df_styled(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
         holdings_df_columns = {
                             "account_name"  : "Account",
                             "ticker"        : "Ticker",
@@ -407,11 +413,9 @@ class Portfolio():
                             "target_weight" : "Target Weight",
                             "current_weight": "Current Weight",
                             "target_diff"   : "Target Diff"
-
-                        }
-
-        c1.markdown("**Before Rebalance**")
-        c1.dataframe(holdings_df.loc[:,list(holdings_df_columns.keys())]
+                        } 
+        column.markdown("**Before Rebalance**")
+        column.dataframe(holdings_df.loc[:,list(holdings_df_columns.keys())]
                         .rename(columns=holdings_df_columns)
                         .style
                         .applymap(Portfolio.color_negative_red, 
@@ -427,8 +431,27 @@ class Portfolio():
                             'Gain/Loss':        lambda x: f"${x:,.2f}",
                             'Shares':           lambda x: f"{x:,.4f}"    
                         }))
-        c2.markdown("**After Rebalance**")
-        c2.dataframe(future_holdings_df.loc[:,list(holdings_df_columns.keys())]
+        return None
+    
+    def future_holdings_df_styled(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
+        holdings_df_columns = {
+                            "account_name"  : "Account",
+                            "ticker"        : "Ticker",
+                            "shares"        : "Shares",
+                            "price"         : "Price",
+                            "market_value"  : "Market Value",
+                            "cost"          : "Cost",
+                            "gain_loss"     : "Gain/Loss",
+                            "gain_loss_pct" : "Gain/Loss %",
+                            "target_weight" : "Target Weight",
+                            "current_weight": "Current Weight",
+                            "target_diff"   : "Target Diff"
+                        } 
+        column.markdown("**After Rebalance**")
+        column.dataframe(future_holdings_df.loc[:,list(holdings_df_columns.keys())]
                         .rename(columns=holdings_df_columns)
                         .style
                         .applymap(Portfolio.color_negative_red, 
@@ -444,114 +467,44 @@ class Portfolio():
                             'Gain/Loss':        lambda x: f"${x:,.2f}",
                             'Shares':           lambda x: f"{x:,.4f}"    
                         }))
+        return None
+        
+    
+    def grouped_bar_chart(accounts,index,column): 
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
+        combined_df = db.fetch(get_query_string("combined_holdings"))
+
+        with open('app/grouped_bar_chart.json',"r") as file:
+            vega_chart = json.load(file)
+
+        column.markdown(
+            '<div style="text-align: center;">' +
+            '<strong>Comparison of Target Weight Differences Before vs ' +
+            'After Rebalance</strong>' +
+            '</div>',
+            unsafe_allow_html=True)
+        
+        column.vega_lite_chart(combined_df,vega_chart,use_container_width=True)
         
         return None
+    
+    def orders_df_styled(accounts,index,column):
+        holdings_df, future_holdings_df = (Portfolio
+                                           .get_holdings_df_filtered(accounts,index)
+                                        )
+        combined_df = db.fetch(get_query_string("combined_holdings"))
 
-    def visuals(accounts,index):
-        c1,c2 = st.columns([7,3])
-        raw_holdings_df = db.fetch(get_query_string("select_holdings"))
-        raw_future_holdings_df = db.fetch(get_query_string("select_future_holdings"))
-        holdings_df = db.fetch(
-            f"""
-            SELECT *
-            FROM raw_holdings_df
-            WHERE account_name = '{accounts[index]}'
-            """
-        )
-        
-        future_holdings_df = db.fetch(
-            f"""
-            SELECT *
-            FROM raw_future_holdings_df
-            WHERE account_name = '{accounts[index]}'
-            """
-        )   
-        combined_df = db.fetch(
-            f"""
-            SELECT
-                'Before' as rebalance,
-                ticker,
-                shares,
-                target_weight,
-                current_weight,
-                target_diff,
-                cost,
-                market_value,
-                price,
-                gain_loss,
-                gain_loss_pct,
-            FROM
-                holdings_df
-            WHERE account_name = '{accounts[index]}'
-            UNION
-            SELECT
-                'After' as rebalance,
-                ticker,
-                shares,
-                target_weight,
-                current_weight,
-                target_diff,
-                cost,
-                market_value,
-                price,
-                gain_loss,
-                gain_loss_pct,
-            FROM
-                future_holdings_df
-            WHERE account_name = '{accounts[index]}'
-            """
-        )
+        orders_df = db.fetch(get_query_string("select_orders"))
 
-        vega_chart = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "mark": "bar",
-            "encoding": {
-                "x": {"field": "ticker","title" :"Ticker"},
-                "y": {"field": "target_diff", "type": "quantitative","title" :"Diff From Target Weight (%)"},
-                "tooltip": [
-                    {"field": "ticker", "type": "nominal", "title": "Ticker"},
-                    {"field": "target_weight", "type": "quantitative", "title":"Target Weight (%)"},
-                    {"field": "target_diff", "type": "quantitative","title":"Target Diff (%)"}
-                ],
-                "xOffset": {"field": "rebalance", "sort": "descending"},
-                "color": {
-                    "field": "rebalance", 
-                    "sort": "descending",
-                    "title":"After or Before Rebalance"
-                }   
-            }
-        }
-            
-        c1.markdown('<div style="text-align: center;"><strong>Comparison of Target Weight Differences Before vs After Rebalance</strong></div>', unsafe_allow_html=True)
-        
-        c1.vega_lite_chart(combined_df,vega_chart,use_container_width=True)
-
-        orders_df = db.fetch(
-            """
-            SELECT
-                CASE
-                    WHEN (future.shares - current.shares) > 0 then 'Buy'
-                    ELSE 'Sell'
-                END AS "Order Type",
-                current.ticker AS Ticker,
-                future.shares - current.shares AS Shares,
-                current.price AS Price,
-                (future.shares - current.shares) * -1 * current.price AS "Trade Amount"
-            FROM
-                holdings_df AS current
-                INNER JOIN future_holdings_df AS future using(holding_id)
-            WHERE
-                (future.shares - current.shares) != 0           
-            ORDER BY
-                Ticker
-            """
-        )
-        c2.markdown(
-            '''
-            <div style="text-align: center;"><strong>Orders Needed For Rebalance</strong></div>
-            ''',
+        column.markdown(
+            '<div style="text-align: center;">' +
+            '<strong>Orders Needed For Rebalance</strong>' +
+            '</div>',
             unsafe_allow_html=True)
-        c2.dataframe(orders_df.style
+        
+        column.dataframe(orders_df.style
                             .applymap(Portfolio.color_negative_red, 
                                       subset=["Trade Amount"])
                             .format({

@@ -1,0 +1,19 @@
+{
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "mark": "bar",
+    "encoding": {
+        "x": {"field": "ticker","title" :"Ticker"},
+        "y": {"field": "target_diff", "type": "quantitative","title" :"Diff From Target Weight (%)"},
+        "tooltip": [
+            {"field": "ticker", "type": "nominal", "title": "Ticker"},
+            {"field": "target_weight", "type": "quantitative", "title":"Target Weight (%)"},
+            {"field": "target_diff", "type": "quantitative","title":"Target Diff (%)"}
+        ],
+        "xOffset": {"field": "rebalance", "sort": "descending"},
+        "color": {
+            "field": "rebalance", 
+            "sort": "descending",
+            "title":"After or Before Rebalance"
+        }   
+    }
+}
