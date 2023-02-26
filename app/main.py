@@ -1,7 +1,6 @@
-import duckdb
 import streamlit as st
 
-from ui import Sidebar, HoldingsInput, CashInput,Portfolio
+from ui import Sidebar,HoldingsInput,CashInput,Portfolio
 
 st.set_page_config(layout="wide")
 
