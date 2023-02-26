@@ -1,11 +1,8 @@
 "account_name","ticker","security_name","shares","target_weight","cost","price"
-"Roth","AVDV","Test",5.0,4.0,253.04,59.36
-"Roth","AVUV","Test",15.0,15.0,1089.35,83.76
-"Roth","VEA","Test",25.0,15.0,971.62,45.59
-"Roth","VTI","Test",24.0,60.0,4504.37,207.34
-"Roth","VWO","Test",11.0,6.0,407.13,41.63
-"401k","AVDV","Test",5.0,4.0,253.04,59.36
-"401k","AVUV","Test",15.0,15.0,1089.35,83.76
-"401k","VEA","Test",25.0,15.0,971.62,45.59
-"401k","VTI","Test",24.0,60.0,4504.37,207.34
-"401k","VWO","Test",11.0,6.0,407.13,80.00
+"Roth","TSLA","Tesla",10.00,20.00,1759.00,196.88
+"Roth","MSFT","Microsoft",10.00,20.00,2250.00,249.22
+"Roth","AAPL","Apple",10.00,20.00,1000.00,146.71
+"Roth","AMZN","Amazon",10.00,20.00,1000.00,93.50
+"Roth","NVDA","Nvidia",10.00,20.00,2150.00,232.86
+"401k","BND","Vanguard Total Bond Market Index Fund ETF",40.0,40.0,2000.00,71.93
+"401k","VTI","Vanguard Total Stock Market",24.0,60.0,4507.37,207.34
