@@ -1,6 +1,8 @@
 # **RePort** ⚖️
 A portfolio rebalancing tool to help investors get their positions back to target weights. Powered by [DuckDB](https://duckdb.org/), [Streamlit](https://streamlit.io/).
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://portfolio-rebalancer.streamlit.app/)
+
 ![RePort](assets/RePort.jpg)
 
 ## **Overview**
