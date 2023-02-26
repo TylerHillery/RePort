@@ -1,6 +1,7 @@
 WITH 
 market_value as (
     SELECT
+        holdings.holding_id,
         holdings.account_name,
         holdings.ticker,
         holdings.security_name,
@@ -64,14 +65,15 @@ shares_to_invest as (
         target_diff / 100 * -1 * portfolio_market_value / price as all_shares_to_invest_frac,
     FROM pct_to_invest_cte
 )
-SELECT 
+SELECT  
+    holding_id,
     account_name,
     ticker,
     security_name,
     shares,
     target_weight,
     current_weight,
-    target_diff,
+    round(target_diff,4) as target_diff,
     pct_to_invest,
     round(cost,2) as cost,
     round(market_value,2) as market_value,

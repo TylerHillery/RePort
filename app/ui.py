@@ -187,11 +187,35 @@ class HoldingsInput():
         
         return data
 
-class Portfolio():     
-    def create_tables():
+class Portfolio():
+    def create_tables(rebalance_type, is_frac_shares):
         db.query(get_query_string('create_holdings_table')) 
         db.query(get_query_string('create_cash_table')) 
-        
+
+    def update_tables(table: tuple,df: pd.DataFrame) -> None:
+        if table == 'cash':
+            db.query("DELETE FROM cash")
+            db.query("""
+                INSERT INTO 
+                    cash 
+                SELECT
+                    *
+                FROM 
+                    df
+                """)  
+        elif table == 'holdings':
+            db.query("DELETE FROM holdings")
+            db.query("""
+            INSERT INTO
+                holdings 
+            SELECT 
+                md5(concat(lower(trim(account_name)),lower(trim(ticker)))),
+                * 
+            FROM 
+                df
+            """)
+        return
+    
     def get_cash_table():
         df = (db.fetch(get_query_string('select_cash')))
         return df
@@ -200,7 +224,10 @@ class Portfolio():
         return db.fetch(get_query_string('select_holdings'))
 
     def get_raw_holdings_table():
-        return db.fetch("SELECT * FROM holdings ORDER BY ticker")
+        return db.fetch("SELECT account_name,ticker,security_name,shares,target_weight,cost,price FROM holdings ORDER BY account_name,ticker")
+    
+    def get_raw_cash_table():
+        return db.fetch("SELECT account_name,cash FROM cash ORDER BY account_name")
 
     def get_accounts():
         accounts = list(map(lambda _tup: str(_tup[0]), db.fetch(
@@ -209,15 +236,17 @@ class Portfolio():
                 )))
         return accounts 
 
-    def dynamic_invest(account):
+    def get_account_cash(account: str) -> float: 
+        return db.fetch(f"SELECT cash FROM cash WHERE account_name = '{account}'",return_df=False)[0][0]
 
+    def dynamic_invest(account):
         df = db.fetch(get_query_string('select_future_holdings'))
 
         cash = db.fetch(
             f"SELECT cash FROM future_cash WHERE account_name = '{account}'",
             return_df=False
         )[0][0]
-        
+
         is_cash_left =  bool(db.fetch(
             f"""
             SELECT 
@@ -320,6 +349,7 @@ class Portfolio():
         sql = (f"""
         CREATE TABLE future_holdings as (
             SELECT 
+                holding_id,
                 account_name,   
                 ticker,         
                 security_name,  
@@ -348,10 +378,14 @@ class Portfolio():
             "SELECT DISTINCT account_name FROM cash",
             return_df=False
                 )))
-                
-            map(Portfolio.dynamic_invest, accounts)
+            for account in accounts:
+                Portfolio.dynamic_invest(account)
         return
     
     def get_future_holdings_table(rebalance_type, is_frac_shares):
         Portfolio.create_future_holdings(rebalance_type, is_frac_shares)
         return db.fetch(get_query_string('select_future_holdings'))
+    
+    def get_account_future_cash(account: str,rebalance_type, is_frac_shares) -> float: 
+        df = Portfolio.get_future_holdings_table(rebalance_type, is_frac_shares)
+        return db.fetch(f"SELECT max(cash) FROM df WHERE account_name = '{account}'",return_df=False)[0][0]

@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-streamlit = "^1.17.0"
+streamlit = "1.19.0"
 duckdb = "0.7.0"
 
 [tool.poetry.group.dev.dependencies]

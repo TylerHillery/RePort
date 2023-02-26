@@ -1,6 +1,7 @@
 WITH 
 market_value as (
     SELECT
+        future_holdings.holding_id,
         future_holdings.account_name,
         future_holdings.ticker,
         future_holdings.security_name,
@@ -65,13 +66,14 @@ shares_to_invest as (
     FROM pct_to_invest_cte
 )
 SELECT 
+    holding_id, 
     account_name,
     ticker,
     security_name,
     shares,
     target_weight,
     current_weight,
-    target_diff,
+    round(target_diff,4) as target_diff,
     pct_to_invest,
     round(cost,2) as cost,
     round(market_value,2) as market_value,
