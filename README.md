@@ -14,11 +14,11 @@ RePort is designed to help investors get their positions back to their target we
 
 2. **Investable Cash Target**
 
-    This method will invest the cash according to the target weight for that security, regardless if the security is under or overweight.
+    This method will invest the cash according to the target weight for that security.
 
 3. **Whole Portfolio**
 
-    This method will create sell orders for overweight positions and buy orders for underweight positions.
+    This method will rebalance the entire portfolio and will create sell orders for overweight positions and buy orders for underweight positions.
 
 ## **Configurations**
 - **Input Method**
