@@ -27,10 +27,9 @@ RePort is designed to help investors get their positions back to their target we
     - **File**: Can upload a csv file with holdings. Take a look at the [examples](https://github.com/TylerHillery/RePort/tree/main/app/data) on the format expected for the csv files. 
     - **Manual**: Can edit an editable DataFrame similar to an spreadsheet
 - **Allow Fractional Shares**
-    - This is impact the calculations for the rebalance and if the user is allowed to do fractional shares investing where you can purchase fractional shares of a particular stock. This makes it much easier for rebalancing purposes because you can think in terms of dollars invested opposed to shares. 
+    - This will impact the calculations for the rebalance by allowing the ability to purchase fractional shares.
 - **Add Sample Data** 
-    - Will delete what is currently entered and load sample data to show
-    how the app can be used. 
+    - Will delete all current data and load sample data to show how the app can be used. 
 
 ## **Disclaimer**
 This app does not store any data. After the streamlit sessions ends your data will be lost. The easiest way to get the data to persist would be to clone this repo and instead of using the `:memory:` connection you can create a duckdb database file. 
