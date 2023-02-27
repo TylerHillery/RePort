@@ -26,7 +26,7 @@ RePort is designed to help investors get their positions back to their target we
 - **Input Method**
     - **File**: Can upload a csv file with holdings. Take a look at the [examples](https://github.com/TylerHillery/RePort/tree/main/app/data) on the format expected for the csv files. 
     - **Manual**: Can edit an editable DataFrame similar to an spreadsheet
-- **Allow Fractional Shares**V
+- **Allow Fractional Shares**
     - This is impact the calculations for the rebalance and if the user is allowed to do fractional shares investing where you can purchase fractional shares of a particular stock. This makes it much easier for rebalancing purposes because you can think in terms of dollars invested opposed to shares. 
 - **Add Sample Data** 
     - Will delete what is currently entered and load sample data to show
