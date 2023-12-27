@@ -329,9 +329,9 @@ class Portfolio:
                 f"""
                 SELECT
                     ticker,
-                    dynamic_shares_to_invest_whole + 1 + shares,
+                    1 + shares,
                     cash - price as new_cash,
-                    cost + (( dynamic_shares_to_invest_whole + 1)* price) as cost
+                    cost + price as cost
                 FROM 
                     df
                 WHERE
