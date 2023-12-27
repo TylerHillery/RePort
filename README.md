@@ -5,6 +5,9 @@ A portfolio rebalancing tool to help investors get their positions back to targe
 
 ![RePort](assets/RePort.jpg)
 
+> **WARNING**: This tool is not meant for "production" use. Please use caution if using this tool to rebalance your actual portfolio and verify the orders
+it recommends before placing them.
+
 ## **Overview**
 RePort is designed to help investors get their positions back to their target weights. RePort has 3 different types of rebalance methods.
 
@@ -30,6 +33,14 @@ RePort is designed to help investors get their positions back to their target we
     - This will impact the calculations for the rebalance by allowing the ability to purchase fractional shares.
 - **Add Sample Data** 
     - Will delete all current data and load sample data to show how the app can be used. 
+- **Select Brokerage Platform**
+    - This impacts the file parser used on the holdings file. Each brokerage platform outputs your positions in different ways. RePort only supports Charles Schwab at this time.
+- **Upload Holidngs File**
+    - Allows the ability to upload a file (typically an export from your brokerage account) of your portfolio positions.
+- **Upload Target Weights File** 
+    - Upload the target weights you have for each account. You can look at the [example_target_weights.json](https://github.com/TylerHillery/RePort/blob/main/app/data/example_target_weights.json) file to see how to structure the file for your target weights.
+- **Add holdings data**
+    - Check this box after uploading your holdings file and target weights to run the rebalance calculations.
 
 ## **Disclaimer**
 This app does not store any data. After the streamlit sessions ends your data will be lost. The easiest way to get the data to persist would be to clone this repo and instead of using the `:memory:` connection you can create a duckdb database file. 
