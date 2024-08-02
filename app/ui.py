@@ -570,7 +570,7 @@ class Portfolio:
         column.dataframe(
             holdings_df.loc[:, list(holdings_df_columns.keys())]
             .rename(columns=holdings_df_columns)
-            .style.applymap(
+            .style.map(
                 Portfolio.color_negative_red,
                 subset=["Target Diff", "Gain/Loss", "Gain/Loss %"],
             )
@@ -616,7 +616,7 @@ class Portfolio:
         column.dataframe(
             future_holdings_df.loc[:, list(holdings_df_columns.keys())]
             .rename(columns=holdings_df_columns)
-            .style.applymap(
+            .style.map(
                 Portfolio.color_negative_red,
                 subset=["Target Diff", "Gain/Loss", "Gain/Loss %"],
             )
@@ -673,7 +673,7 @@ class Portfolio:
         )
 
         column.dataframe(
-            orders_df.style.applymap(
+            orders_df.style.map(
                 Portfolio.color_negative_red, subset=["Trade Amount"]
             ).format(
                 {
